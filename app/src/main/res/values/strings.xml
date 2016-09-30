@@ -209,6 +209,9 @@
     <string name="notification_deactivated_title">orWall is deactivated</string>
     <string name="notification_deactivated_text">You may be at risk!</string>
 
+    <string name="notification_activated_title">orWall is running</string>
+    <string name="notification_activated_text">You are probably safe</string>
+
     <string name="warning_iptables">IPTables was not detected</string>
     <string name="warning_root">It seems root access has been denied</string>
     <string name="searchbutton">Search</string>

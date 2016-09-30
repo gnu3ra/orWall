@@ -266,7 +266,7 @@ public class HomeFragment extends Fragment {
 
         Intent intent = new Intent(this.getActivity(), TabbedMain.class);
         final PendingIntent pintent = PendingIntent.getActivity(this.getActivity(), 0, intent, 0);
-
+        final PendingIntent pintent_running = PendingIntent.getActivity(this.getActivity(), 0, intent, 0);
         final NotificationCompat.Builder notification = new NotificationCompat.Builder(getActivity())
                 .setAutoCancel(false)
                 .setOngoing(true)
@@ -277,6 +277,14 @@ public class HomeFragment extends Fragment {
 
         final NotificationManager notificationManager = (NotificationManager)getActivity().getSystemService(Context.NOTIFICATION_SERVICE);
 
+        final NotificationCompat.Builder running = new NotificationCompat.Builder(getActivity())
+                .setAutoCancel(false)
+                .setOngoing(true)
+                .setContentIntent(pintent_running)
+                .setContentTitle(getString(R.string.notification_activated_title))
+                .setContentText(getString(R.string.notification_deactivated_text))
+                .setSmallIcon(R.drawable.v2);
+
         if (checked) {
             bgpProcess.putExtra(Constants.ACTION, Constants.ACTION_ENABLE_ORWALL);
             getActivity().startService(bgpProcess);
@@ -284,6 +292,7 @@ public class HomeFragment extends Fragment {
             updateOptions();
             Toast.makeText(this.getActivity(), getString(R.string.enabling_orwall), Toast.LENGTH_LONG).show();
             notificationManager.cancel(1);
+            notificationManager.notify(2,running.build());
 
         } else {
             final AlertDialog.Builder alertDialog = new AlertDialog.Builder(this.getActivity());
@@ -298,6 +307,7 @@ public class HomeFragment extends Fragment {
                     Preferences.setOrwallEnabled(getActivity(), false);
                     updateOptions();
                     notificationManager.notify(1, notification.build());
+                    notificationManager.cancel(2);
                 }
             });
 
