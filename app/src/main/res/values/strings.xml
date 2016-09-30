@@ -211,4 +211,6 @@
 
     <string name="warning_iptables">IPTables was not detected</string>
     <string name="warning_root">It seems root access has been denied</string>
+    <string name="searchbutton">Search</string>
+    <string name="stext">Search for apps...</string>
 </resources>

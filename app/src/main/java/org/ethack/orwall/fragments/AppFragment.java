@@ -1,13 +1,18 @@
 package org.ethack.orwall.fragments;
 
+import android.app.Activity;
+import android.app.Dialog;
 import android.content.pm.PackageInfo;
 import android.content.pm.PackageManager;
 import android.os.Bundle;
 import android.support.v4.app.Fragment;
 import android.support.v4.util.LongSparseArray;
+import android.support.v7.app.AlertDialog;
 import android.view.LayoutInflater;
 import android.view.View;
 import android.view.ViewGroup;
+import android.widget.Button;
+import android.widget.EditText;
 import android.widget.ListView;
 
 import org.ethack.orwall.R;
@@ -33,10 +38,12 @@ import java.util.Map;
  */
 public class AppFragment extends Fragment {
 
+    private Button searchButton;
     @Override
     public View onCreateView(LayoutInflater inflater, ViewGroup container, Bundle savedInstanceState) {
 
         View view;
+        final Activity main = this.getActivity();
 
         view  = inflater.inflate(R.layout.fragment_tabbed_apps, container, false);
         Iptables iptables = new Iptables(getActivity());
@@ -56,7 +63,7 @@ public class AppFragment extends Fragment {
             view.findViewById(R.id.warn_init).setVisibility(View.VISIBLE);
         }
 
-        ListView listView = (ListView) view.findViewById(R.id.id_enabled_apps);
+        final ListView listView = (ListView) view.findViewById(R.id.id_enabled_apps);
 
         // Toggle hint layer
         boolean hide_hint = Preferences.isHidePressHint(getActivity());
@@ -96,6 +103,50 @@ public class AppFragment extends Fragment {
 
         listView.setAdapter(new AppListAdapter(this.getActivity(), enabledApps));
 
+        searchButton = (Button) getActivity().findViewById(R.id.search);
+        searchButton.setOnClickListener(new View.OnClickListener() {
+            @Override
+            public void onClick(View view) {
+                final Dialog dialog = new Dialog(getActivity());
+                dialog.setContentView(R.layout.sample_searchdialog);
+                dialog.setTitle("Search");
+                final View layout = View.inflate(getActivity(), R.layout.sample_searchdialog, null);
+                Button button = (Button) dialog.findViewById(R.id.executesearch);
+                button.setOnClickListener(new View.OnClickListener() {
+                    @Override
+                    public void onClick(View view) {
+                        EditText edit = (EditText) layout.findViewById(R.id.searchtext);
+                        String text = edit.getText().toString();
+
+                        NatRules natRules = new NatRules(main);
+                        List<AppRule> enabledApps = natRules.getAllRules();
+                        LongSparseArray<AppRule> rulesIndex = new LongSparseArray<>();
+                        for (AppRule app: enabledApps) rulesIndex.put(app.getAppUID(), app);
+
+                        // get disabled apps (filtered with enabled)
+                        List<AppRule> disabledApps = searchDisabledAppsByString(rulesIndex,text);
+                        // Get special, disabled apps
+                        List<AppRule> specialDisabled = listSpecialApps(rulesIndex);
+
+                        // Merge both disabled apps
+                        disabledApps.addAll(specialDisabled);
+
+                        // Sort collection using a dedicated method
+                        Collections.sort(enabledApps, new AppRuleComparator(getActivity().getPackageManager()));
+                        Collections.sort(disabledApps, new AppRuleComparator(getActivity().getPackageManager()));
+
+                        // merge both collections so that enabled apps are above disabled
+                        enabledApps.addAll(disabledApps);
+
+                        listView.setAdapter(new AppListAdapter(main, enabledApps));
+
+                        dialog.dismiss();
+                    }
+                });
+                dialog.show();
+            }
+        });
+
         return view;
     }
 
@@ -103,7 +154,7 @@ public class AppFragment extends Fragment {
      * List all disabled application. Meaning: installed app requiring Internet, but NOT in NatRules.
      * It also filters out special apps like orbot and i2p.
      *
-     * @return List of AppRule
+     * @return List of AppRuletch_parent
      */
     private List<AppRule> listDisabledApps(LongSparseArray<AppRule> index) {
         PackageManager packageManager = this.getActivity().getPackageManager();
@@ -135,6 +186,27 @@ public class AppFragment extends Fragment {
             }
         }
 
+        return pkgList;
+    }
+
+
+    private List<AppRule> searchDisabledAppsByString(LongSparseArray<AppRule> index, String keyword) {
+        PackageManager packageManager = this.getActivity().getPackageManager();
+        List<AppRule> pkgList = new ArrayList<>();
+
+        List<PackageInfo> pkgInstalled = packageManager.getInstalledPackages(PackageManager.GET_PERMISSIONS);
+
+        for (PackageInfo pkgInfo : pkgInstalled) {
+            if (needInternet(pkgInfo) && !isReservedApp(pkgInfo)) {
+                if (index.indexOfKey((long) pkgInfo.applicationInfo.uid) < 0) {
+                    AppRule app = new AppRule(false, pkgInfo.packageName, (long) pkgInfo.applicationInfo.uid, Constants.DB_ONION_TYPE_NONE, false, false);
+                    if(keyword.contains(packageManager.getApplicationLabel(pkgInfo.applicationInfo).toString())) {
+                        app.setAppName(packageManager.getApplicationLabel(pkgInfo.applicationInfo).toString());
+                        pkgList.add(app);
+                    }
+                }
+            }
+        }
         return pkgList;
     }
 
