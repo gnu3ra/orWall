@@ -102,51 +102,38 @@ public class AppFragment extends Fragment {
         enabledApps.addAll(disabledApps);
 
         listView.setAdapter(new AppListAdapter(this.getActivity(), enabledApps));
+       final  EditText edit = (EditText) view.findViewById(R.id.searchtext);
 
-        searchButton = (Button) getActivity().findViewById(R.id.search);
+        searchButton = (Button) view.findViewById(R.id.search);
         searchButton.setOnClickListener(new View.OnClickListener() {
             @Override
             public void onClick(View view) {
-                final Dialog dialog = new Dialog(getActivity());
-                dialog.setContentView(R.layout.sample_searchdialog);
-                dialog.setTitle("Search");
-                final View layout = View.inflate(getActivity(), R.layout.sample_searchdialog, null);
-                Button button = (Button) dialog.findViewById(R.id.executesearch);
-                button.setOnClickListener(new View.OnClickListener() {
-                    @Override
-                    public void onClick(View view) {
-                        EditText edit = (EditText) layout.findViewById(R.id.searchtext);
-                        String text = edit.getText().toString();
+                String text = edit.getText().toString();
 
-                        NatRules natRules = new NatRules(main);
-                        List<AppRule> enabledApps = natRules.getAllRules();
-                        LongSparseArray<AppRule> rulesIndex = new LongSparseArray<>();
-                        for (AppRule app: enabledApps) rulesIndex.put(app.getAppUID(), app);
+                NatRules natRules = new NatRules(main);
+                List<AppRule> enabledApps = natRules.getAllRules();
+                LongSparseArray<AppRule> rulesIndex = new LongSparseArray<>();
+                for (AppRule app : enabledApps) rulesIndex.put(app.getAppUID(), app);
 
-                        // get disabled apps (filtered with enabled)
-                        List<AppRule> disabledApps = searchDisabledAppsByString(rulesIndex,text);
-                        // Get special, disabled apps
-                        List<AppRule> specialDisabled = listSpecialApps(rulesIndex);
+                // get disabled apps (filtered with enabled)
+                List<AppRule> disabledApps = searchDisabledAppsByString(rulesIndex, text);
+                // Get special, disabled apps
+                List<AppRule> specialDisabled = listSpecialApps(rulesIndex);
 
-                        // Merge both disabled apps
-                        disabledApps.addAll(specialDisabled);
+                // Merge both disabled apps
+                disabledApps.addAll(specialDisabled);
 
-                        // Sort collection using a dedicated method
-                        Collections.sort(enabledApps, new AppRuleComparator(getActivity().getPackageManager()));
-                        Collections.sort(disabledApps, new AppRuleComparator(getActivity().getPackageManager()));
+                // Sort collection using a dedicated method
+                Collections.sort(enabledApps, new AppRuleComparator(getActivity().getPackageManager()));
+                Collections.sort(disabledApps, new AppRuleComparator(getActivity().getPackageManager()));
 
-                        // merge both collections so that enabled apps are above disabled
-                        enabledApps.addAll(disabledApps);
+                // merge both collections so that enabled apps are above disabled
+                enabledApps.addAll(disabledApps);
 
-                        listView.setAdapter(new AppListAdapter(main, enabledApps));
-
-                        dialog.dismiss();
-                    }
-                });
-                dialog.show();
+                listView.setAdapter(new AppListAdapter(main, enabledApps));
+                listView.refreshDrawableState();
             }
         });
-
         return view;
     }
 
@@ -200,7 +187,7 @@ public class AppFragment extends Fragment {
             if (needInternet(pkgInfo) && !isReservedApp(pkgInfo)) {
                 if (index.indexOfKey((long) pkgInfo.applicationInfo.uid) < 0) {
                     AppRule app = new AppRule(false, pkgInfo.packageName, (long) pkgInfo.applicationInfo.uid, Constants.DB_ONION_TYPE_NONE, false, false);
-                    if(keyword.contains(packageManager.getApplicationLabel(pkgInfo.applicationInfo).toString())) {
+                    if(packageManager.getApplicationLabel(pkgInfo.applicationInfo).toString().contains(keyword)) {
                         app.setAppName(packageManager.getApplicationLabel(pkgInfo.applicationInfo).toString());
                         pkgList.add(app);
                     }

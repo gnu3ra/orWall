@@ -5,11 +5,28 @@
     android:layout_height="match_parent"
     android:orientation="vertical">
 
-    <Button
-        android:text="@string/searchbutton"
+
+
+    <LinearLayout
+        android:orientation="horizontal"
         android:layout_width="match_parent"
+        android:layout_height="wrap_content">
+
+        <EditText
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:inputType="textPersonName"
+            android:text=""
+            android:ems="10"
+            android:id="@+id/searchtext"
+            android:layout_weight="1" />
+
+        <Button
+        android:text="@string/searchbutton"
+        android:layout_width="131dp"
         android:layout_height="wrap_content"
         android:id="@+id/search" />
+    </LinearLayout>
 
     <TextView
         android:id="@+id/warn_init"
