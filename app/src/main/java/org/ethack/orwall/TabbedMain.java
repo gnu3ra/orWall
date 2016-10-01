@@ -3,9 +3,12 @@ package org.ethack.orwall;
 import android.app.ActionBar;
 import android.app.ActionBar.Tab;
 import android.app.FragmentTransaction;
+import android.app.NotificationManager;
+import android.content.Context;
 import android.content.Intent;
 import android.os.Bundle;
 import android.support.v4.app.FragmentActivity;
+import android.support.v4.app.NotificationCompat;
 import android.support.v4.view.ViewPager;
 import android.view.Menu;
 import android.view.MenuItem;
@@ -101,6 +104,17 @@ public class TabbedMain extends FragmentActivity implements ActionBar.TabListene
             public void onPageScrollStateChanged(int arg0) {
             }
         });
+
+        final NotificationManager notificationManager = (NotificationManager)
+                this.getSystemService(Context.NOTIFICATION_SERVICE);
+        final NotificationCompat.Builder running = new NotificationCompat.Builder(this)
+                .setAutoCancel(false)
+                .setOngoing(true)
+                .setContentTitle("Orwall running")
+                .setContentText("You are hopefully protected")
+                .setSmallIcon(R.drawable.v2);
+
+        notificationManager.notify(2,running.build());
     }
 
 

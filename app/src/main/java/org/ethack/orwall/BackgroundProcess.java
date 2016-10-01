@@ -1,7 +1,10 @@
 package org.ethack.orwall;
 
 import android.app.IntentService;
+import android.app.NotificationManager;
+import android.content.Context;
 import android.content.Intent;
+import android.support.v4.app.NotificationCompat;
 
 import org.ethack.orwall.lib.Constants;
 import org.ethack.orwall.lib.Iptables;
@@ -52,6 +55,16 @@ public class BackgroundProcess extends IntentService {
                 
             } else if (action.equals(Constants.ACTION_ENABLE_ORWALL)) {
                 iptables.boot();
+                final NotificationManager notificationManager = (NotificationManager)
+                        this.getSystemService(Context.NOTIFICATION_SERVICE);
+                final NotificationCompat.Builder running = new NotificationCompat.Builder(this)
+                        .setAutoCancel(false)
+                        .setOngoing(true)
+                        .setContentTitle("Orwall running")
+                        .setContentText("You are hopefully protected")
+                        .setSmallIcon(R.drawable.v2);
+
+                notificationManager.notify(2,running.build());
             } else {
                 Log.e("BackgroundProcess", "Just got an unknown action!");
             }
